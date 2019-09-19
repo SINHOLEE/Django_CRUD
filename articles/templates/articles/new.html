@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>new</title>
+</head>
+<body>
+  {% comment %} 우리는 create에다 데이터를 보낼거에요 {% endcomment %}
+  <h1>Welcome to my homepage</h1>
+  <a href="/articles/">[되돌아가기]</a>
+  <hr>
+  <form action="/articles/create">
+  <input type="text", name='title'> <br>
+  <textarea name="content"  cols="30" rows="10"></textarea><br>
+  <button type="submit">생성하기</button><br>
+  </form>
+
+
+</body>
+</html>
