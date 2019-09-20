@@ -308,3 +308,179 @@ def create(request):
 
 
 이슈 CSRF 토큰 넣기 	
+
+
+
+# 5. django_extensions
+
+1. 인스톨하기
+
+```bash
+$ pip install django_extensions
+```
+
+2. <project>/settings.py에 등록하기  # 서트파티 앱 등록
+
+```python
+INSTALLED_APPS = [
+    #Local app
+    'articles',
+    'jobs',
+
+    # third party apps
+    'django_extensions',
+
+```
+
+3. bash에서 
+
+```bash
+python manage.py shell_plus
+```
+
+4.  기존에 Article에 데이터 삽입
+
+```python
+article = Article()
+article.title = '새로운 데ㅣ터 헤헤헤헤'
+aritcle.content = '새로운 내용이 들ㅇ왔어요'
+
+article.save()
+
+comment = Comment()
+comment.content = '첫번째 댓글'
+comment.article = article
+comment.save()
+
+comment = Comment(article=article, content='두번째 댓굴이에오')
+comment.save()
+```
+
+5. article 이 사용할 수 있는 모든 명령어들
+
+```python
+dir(article)
+
+['DoesNotExist', 'MultipleObjectsReturned', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_check_column_name_clashes', '_check_constraints', '_check_field_name_clashes', '_check_fields', '_check_id_field',
+'_check_index_together', '_check_indexes', '_check_local_fields', '_check_long_column_names', '_check_m2m_through_same_relationship', '_check_managers', '_check_model', '_check_model_name_db_lookup_clashes', '_check_ordering', '_check_property_name_related_field_accessor_clashes', '_check_single_primary_key', '_check_swappable', '_check_unique_together', '_do_insert', '_do_update', '_get_FIELD_display', '_get_next_or_previous_by_FIELD', '_get_next_or_previous_in_order', '_get_pk_val', '_get_unique_checks', '_meta', '_perform_date_checks', '_perform_unique_checks', '_save_parents', '_save_table', '_set_pk_val', '_state', 'check', 'clean', 'clean_fields', 
+ 
+ 'comment_set', 
+ 
+ 'content', 'created_at', 'date_error_message', 'delete', 'from_db', 'full_clean', 'get_deferred_fields', 'get_next_by_created_at', 'get_next_by_updated_at', 'get_previous_by_created_at', 'get_previous_by_updated_at', 'id', 'objects', 'pk', 'prepare_database_save', 'refresh_from_db', 'save', 'save_base', 'serializable_value', 'title', 'unique_error_message', 'updated_at', 'validate_unique']
+
+```
+
+
+
+```python
+ dir(article.comment_set)
+
+['__call__', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__slotnames__', '__str__', '__subclasshook__', '__weakref__', '_apply_rel_filters', '_constructor_args', '_db', '_get_queryset_methods', '_hints', '_insert', '_queryset_class', '_remove_prefetched_objects', '_set_creation_counter', '_update', 'add', 'aggregate',
+ 
+ 'all', 
+ 
+ 'annotate', 'auto_created', 'bulk_create', 'bulk_update', 'check', 'complex_filter', 'contribute_to_class', 'core_filters', 'count', 'create', 'creation_counter', 'dates', 'datetimes', 'db', 'db_manager', 'deconstruct', 'defer', 'difference', 'distinct', 'do_not_call_in_templates', 'earliest', 'exclude', 'exists', 'explain', 'extra', 'field', 'filter', 'first', 'from_queryset', 'get', 'get_or_create', 'get_prefetch_queryset', 'get_queryset', 'in_bulk', 'instance', 'intersection', 'iterator', 'last', 'latest', 'model', 'name', 'none', 'only', 'order_by', 'prefetch_related', 'raw', 'reverse', 'select_for_update', 'select_related', 'set', 'union', 'update', 'update_or_create', 'use_in_migrations', 'using', 'values', 'values_list']
+```
+
+ ```python
+pip install ipython  # 좀더 사용자에게 편한 출력데이터 제공
+ ```
+
+
+
+6. comments = article.comment_set.all()
+
+```python
+In [4]: comments
+Out[4]: <QuerySet [<Comment: 두번째 댓굴이에오>]>
+```
+
+
+
+ # 6. 게시판에 댓글 창 만들기
+
+### 1) 댓글 창 보여주기
+
+1. views.py/detail함수
+
+```python
+
+# 꼭 클래스를 임포트 할 것
+from .models import Article, Comment
+
+
+# variable roution 으로 사용자가 보기를 원하는 페이지 pk를 받아서 디페일 페이지에 보여준다.
+def detatil(request, article_pk):
+    # SELECT * FROM articles WHERE pk=article_pk
+    article = get_object_or_404(Article,pk=article_pk)
+
+    # article에 대한 모든 댓글을 꺼내겠다.
+    comments = article.comment_set.all()
+
+
+    context = {
+        'article' : article,
+        'comments' : comments
+    }
+    return render(request, 'articles/detail.html', context)
+```
+
+2. detail.html
+
+```html
+<h4>댓글</h4>
+    <form action="{% url 'articles:comments_create' article.pk %}" method="POST">
+      {% csrf_token %}
+      <input type="text", name='content'>
+      <button type="submit">댓글달기</button>
+    </form>
+```
+
+- 댓글입력창 작성, action에는 우리가 생성한 comments_create view.py에 접근하라고 보낸다.
+
+- views.py에서`def comments_create(request, article_pk):`는 article_pk에 해당하는 새로운 커멘트를 생성하는 함수이다.
+
+2.2 detail.html
+
+```python
+ <ul>
+  {% for comment in comments %}
+    <li>{{ comment.content }}</li>
+  {% empty %}
+    <p>아직 댓글이 없습니다.</p>
+  {% endfor %}
+  </ul>
+```
+
+- detail함수에서 comments를 정의했기 때문에, 다음과 같이 출력할 수 있다. 만약 댓글이 없다면,  empty문이 출력되고, 댓글이 있다면 포문안에서 출력이 된다.
+
+
+
+3. view.py
+
+```python
+def comments_create(request, article_pk):
+    # article_pk에 해당하는 새로운 커멘트 생성...만 하는 view함수임
+    # 생성한 다음 detail page로 redirect하면 된다.
+    # article = get_object_or_404(Article,pk=article_pk)
+    if request.method == "POST":
+        content = request.POST.get('content')
+        comment = Comment()
+        # comment.article = article
+        comment.article_id = article_pk
+        comment.content = content
+        comment.save()
+        
+    return redirect('articles:detail',article_pk)
+
+
+```
+
+- 관계를 나타내는 column이름은 자동으로 생성 (연결되어있는 클래스 이름이 article이기 때문에 article_id라는 이름의 column이 생성되고, foreign key로 관리 된다.)
+
+- foeign key 연결은 두가지 방법이 가능하다. 
+
+  - ` comment.article_id = article_pk`
+  - `article = get_object_or_404(Article,pk=article_pk)` , `comment.article = article`
+
+  

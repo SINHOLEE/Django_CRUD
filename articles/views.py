@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Article
+from .models import Article, Comment
 
 # Create your views here.
 
@@ -21,8 +21,14 @@ def index(request):
 def detatil(request, article_pk):
     # SELECT * FROM articles WHERE pk=article_pk
     article = get_object_or_404(Article,pk=article_pk)
+
+    # article에 대한 모든 댓글을 꺼내겠다.
+    comments = article.comment_set.all()
+
+
     context = {
-        'article' : article
+        'article' : article,
+        'comments' : comments
     }
     return render(request, 'articles/detail.html', context)
 # 입력 페이지 제공
@@ -89,3 +95,23 @@ def update(request, article_pk):
     #     'title' : aritcle.title,
     #     'content' : aritcle.content,
     # }
+
+
+
+def comments_create(request, article_pk):
+    # article_pk에 해당하는 새로운 커멘트 생성...만 하는 view함수임
+    # 생성한 다음 detail page로 redirect하면 된다.
+    # article = get_object_or_404(Article,pk=article_pk)
+    if request.method == "POST":
+        content = request.POST.get('content')
+        comment = Comment()
+        # comment.article = article
+        comment.article_id = article_pk
+        comment.content = content
+        comment.save()
+        
+    return redirect('articles:detail',article_pk)
+
+
+    
+  

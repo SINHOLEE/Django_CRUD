@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}
+jobs 
+{% endblock title %}
+
+{% block body %}
+<h1>당신의 전생은 무슨일을 했었을까요?</h1>
+
+<hr>
+<p>이름을 적어 제출해 주세요</p>
+<form action="{% url 'jobs:past_job' %}", method='POST'>
+  {% csrf_token %}
+  <input type="text", name='name'>
+  <button type="submit">제출하기</button>
+</form>
+{% endblock body %}

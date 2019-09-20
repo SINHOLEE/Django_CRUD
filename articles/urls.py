@@ -13,4 +13,6 @@ urlpatterns = [
     path('<int:article_pk>', views.detatil, name='detail'),  #4 인덱스에서 보여주는 게시글의 디테일을 보여주는 페이지를 만든다.
     path('<int:article_pk>/delete/', views.delete, name='delete'),  # 5 삭제기능만들기
     
+
+    path('<int:article_pk>/comments/', views.comments_create, name='comments_create')  # 6 댓글을 관리하는 url만들기
 ]
