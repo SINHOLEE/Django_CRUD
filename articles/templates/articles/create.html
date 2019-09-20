@@ -10,10 +10,11 @@ new
   <h1>Welcome to my homepage</h1>
   <a href="{% url 'articles:index' %}">[되돌아가기]</a>
   <hr>
-  <form action="{% url 'articles:create' %}">
-  <input type="text", name='title'> <br>
-  <textarea name="content"  cols="30" rows="10"></textarea><br>
-  <button type="submit">생성하기</button><br>
+  <form action="{% url 'articles:create' %}" method="POST">
+    {% csrf_token %}
+    <input type="text", name='title'> <br>
+    <textarea name="content"  cols="30" rows="10"></textarea><br>
+    <button type="submit">생성하기</button><br>
   </form>
 
 

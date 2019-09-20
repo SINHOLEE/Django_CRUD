@@ -273,3 +273,38 @@ def delete(request, article_pk):
 # 4. REST API
 
 참고자료 : https://meetup.toast.com/posts/92
+
+
+
+​    \# 만약 GET요청으로 들어오면 html 페이지 rendering
+
+​    \# 아니라면(POST 라면) 사용자 데이터를 받아서 articles 생성
+
+```python
+# def new 삭제하고 create와 하나로 합친다.
+
+def create(request):
+    # 만약 GET요청으로 들어오면 html 페이지 rendering
+    if request.method == 'GET':
+        return render(request,'articles/new.html')
+    
+    # 아니라면(POST 라면) 사용자 데이터를 받아서 articles 생성
+    else:
+
+        # articles/new/를 통해 new.html의 form에서 전달받은 데이터 
+        title = request.GET.get('title')
+        content = request.GET.get('content')
+
+        #우리가 받은 데이터를 DB에 생성하자
+        article = Article()
+        article.title = title
+        article.content = content
+        article.save()
+
+        return redirect('articles:detail', article.pk)
+
+```
+
+
+
+이슈 CSRF 토큰 넣기 	
