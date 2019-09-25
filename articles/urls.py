@@ -14,5 +14,7 @@ urlpatterns = [
     path('<int:article_pk>/delete/', views.delete, name='delete'),  # 5 삭제기능만들기
     
 
-    path('<int:article_pk>/comments/', views.comments_create, name='comments_create')  # 6 댓글을 관리하는 url만들기
+    path('<int:article_pk>/comments/', views.comments_create, name='comments_create'),  # 6 댓글을 관리하는 url만들기
+    #/articles/3/comments/2/delete -> 3게시글에있는 2번 댓글을 지우겠습니다.
+    path('<int:article_pk>/comments/<int:comment_pk>/delete/', views.comments_delete, name='comments_delete'),
 ]

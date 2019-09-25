@@ -383,7 +383,7 @@ dir(article)
 ```
 
  ```python
-pip install ipython  # 좀더 사용자에게 편한 출력데이터 제공
+pip install ipython  # 좀더 사용자에게 편한 출력데이터 제공 / shell_plus 입니다.
  ```
 
 
@@ -477,10 +477,126 @@ def comments_create(request, article_pk):
 ```
 
 - 관계를 나타내는 column이름은 자동으로 생성 (연결되어있는 클래스 이름이 article이기 때문에 article_id라는 이름의 column이 생성되고, foreign key로 관리 된다.)
-
 - foeign key 연결은 두가지 방법이 가능하다. 
 
   - ` comment.article_id = article_pk`
   - `article = get_object_or_404(Article,pk=article_pk)` , `comment.article = article`
 
+
+
+
+----------------------------------------------9월25일 수요일----------------------------------------------------------------------------
+
+# 7 related_name 설정
+
+
+
+- 장고에서는 기본적으로` article.comment_set`으로 접근해야 하는데, 이를 `aricle.comments`로 접근할 수 있도록 (역참조가 가능하도록) `related_name='comments'` 옵션을 정의한다.
+
+  ```python
+  class Comment(models.Model):
+      # 위 클래스에서 아이디인 값(참조하는 값), on_delete: 만약 1:N관계인 데이터에서 1의 데이터(참초해주는 데이터)가 지워 졌을 때 처리하는 방법
+      article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments')  # models.CASCADE 는 Article이 삭제되면 comment도 함께 삭제됨
   
+  ```
+
+- 모델옵션(정의)가 바뀌었으니 새로 makemigrations, migrate해야한다. 옵션을 바꾸고 다시 한 번 확인작업해보자. 
+
+  ```python
+  python manage.py plus_shell
+  ```
+
+  ```shell
+  In [1]: article = Article.objects.get(pk=1)
+  
+  In [2]: article
+  Out[2]: <Article: Article object (1)>
+  
+  In [3]: article.comments
+  Out[3]: <django.db.models.fields.related_descriptors.create_reverse_many_to_one_manager.<locals>.RelatedManager at 0x20ebbb86788>
+  
+  # 이제 comment_set은 이용할 수 없다.
+  In [4]: article.comment_set
+  ---------------------------------------------------------------------------
+  AttributeError                            Traceback (most recent call last)
+  <ipython-input-4-d8cedf5ec8b1> in <module>
+  ----> 1 article.comment_set
+  
+  AttributeError: 'Article' object has no attribute 'comment_set'
+  ```
+
+- views.py에서 바꾼 옵션을 적용하기 위해  `comments = article.comment_set.all()` 를 `    comments = article.comments.all()`로 바꾼다.
+
+  ```python
+  # variable roution 으로 사용자가 보기를 원하는 페이지 pk를 받아서 디페일 페이지에 보여준다.
+  def detatil(request, article_pk):
+      # SELECT * FROM articles WHERE pk=article_pk
+      article = get_object_or_404(Article,pk=article_pk)
+  
+      # article에 대한 모든 댓글을 꺼내겠다.
+      # comments = article.comment_set.all()
+      
+      #이렇게 바꿈!!!!
+      comments = article.comments.all()
+  
+      context = {
+          'article' : article,
+          'comments' : comments
+      }
+      return render(request, 'articles/detail.html', context)
+  
+  ```
+
+
+
+# 8. 댓글 삭제하기
+
+### 1. urls.py 새로 생성
+
+```python
+urlpatterns = [
+    #/articles/3/comments/2/delete -> 3게시글에있는 2번 댓글을 지우겠습니다.
+    path('<int:article_pk>/comments/<int:comment_pk>/delete/', views.comments_delete, name='comments_delete'),
+]
+```
+
+
+
+### 2. views.py 삭제함수 생성
+
+- post요청일 경우에만 삭제작업을 진행한다.
+
+```python
+def comments_delete(request, article_pk, comment_pk):
+    # comment_pk 에 해당 댓글 삭제
+    # 댓글 삭제 후 detail 페이지로 이동.
+    if request.method == "POST":
+        comment = get_object_or_404(Comment, pk=comment_pk)
+        # 404 페이지가 안뜬다는것은 있다는 뜻이니까. 바로 삭제
+        comment.delete()
+    return redirect('articles:detail', article_pk)
+
+```
+
+
+
+### 3. detail.html 에서 comments for문 안에 수정
+
+```html
+  <ul>
+  {% for comment in comments %}
+    <li>
+      {{ comment.content }}<form action="{% url 'articles:comments_delete' article.pk comment.pk %}" method='POST'>
+        {% csrf_token %}
+        <button type="submit">삭제하기</button>
+      </form>
+    </li>
+    
+  {% empty %}
+    <p>아직 댓글이 없습니다.</p>
+  {% endfor %}
+  </ul>
+```
+
+
+

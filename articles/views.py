@@ -23,7 +23,8 @@ def detatil(request, article_pk):
     article = get_object_or_404(Article,pk=article_pk)
 
     # article에 대한 모든 댓글을 꺼내겠다.
-    comments = article.comment_set.all()
+    # comments = article.comment_set.all()
+    comments = article.comments.all()
 
 
     context = {
@@ -101,17 +102,22 @@ def update(request, article_pk):
 def comments_create(request, article_pk):
     # article_pk에 해당하는 새로운 커멘트 생성...만 하는 view함수임
     # 생성한 다음 detail page로 redirect하면 된다.
-    # article = get_object_or_404(Article,pk=article_pk)
+    # article = get_object_or_404(Article, pk=article_pk)
     if request.method == "POST":
         content = request.POST.get('content')
         comment = Comment()
-        # comment.article = article
-        comment.article_id = article_pk
+        # comment.article = article # 어떤 article의 comment 인지 알려주기 위한 작업
+        comment.article_id = article_pk  # 그렇기 따문에 이렇게 하는게 더 명확하다.
         comment.content = content
         comment.save()
         
     return redirect('articles:detail',article_pk)
 
-
-    
-  
+def comments_delete(request, article_pk, comment_pk):
+    # comment_pk 에 해당 댓글 삭제
+    # 댓글 삭제 후 detail 페이지로 이동.
+    if request.method == "POST":
+        comment = get_object_or_404(Comment, pk=comment_pk)
+        # 404 페이지가 안뜬다는것은 있다는 뜻이니까. 바로 삭제
+        comment.delete()
+    return redirect('articles:detail', article_pk)

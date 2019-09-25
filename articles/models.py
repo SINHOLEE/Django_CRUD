@@ -13,7 +13,8 @@ class Article(models.Model):
 
 class Comment(models.Model):
     # 위 클래스에서 아이디인 값(참조하는 값), on_delete: 만약 1:N관계인 데이터에서 1의 데이터(참초해주는 데이터)가 지워 졌을 때 처리하는 방법
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)  # models.CASCADE 는 Article이 삭제되면 comment도 함께 삭제됨
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments')  # models.CASCADE 는 Article이 삭제되면 comment도 함께 삭제됨
+    #article_id
     content = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
