@@ -8,6 +8,9 @@
 
   <p>작성일자 : {{ article.created_at }}</p>
   <hr>
+  {% if article.image %}
+    <img src="{{ article.image.url }}" alt="{{ article.image }}">
+  {% endif %}
   <p>내용</p> <br>
   <p>{{ article.content }}</p>
 

@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% comment %} 페이지에서 맨 상단, extends보다는 하단 {% endcomment %}
+{% load static %}
 
 {% block title %}
   index
@@ -8,6 +10,7 @@
   <h1>Articles</h1>
 
     <a href="{% url 'articles:create' %}">[작성하기]</a>
+    <img src="{% static 'articles/images/gomi_cute.jpg' %}" alt="그림">
     <hr>
     {% for article in articles  %}
     <div>

@@ -10,10 +10,15 @@ new
   <h1>Welcome to my homepage</h1>
   <a href="{% url 'articles:index' %}">[되돌아가기]</a>
   <hr>
-  <form action="{% url 'articles:create' %}" method="POST">
+  <form action="{% url 'articles:create' %}" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="text", name='title'> <br>
     <textarea name="content"  cols="30" rows="10"></textarea><br>
+
+    {% comment %} 새로 들어옴 {% endcomment %}
+    <label for="image">이미지:</label>
+    <input type="file" name="image" id="image" accept="image/*"><br>
+    {% comment %} 새로들어옴 {% endcomment %}
     <button type="submit">생성하기</button><br>
   </form>
 

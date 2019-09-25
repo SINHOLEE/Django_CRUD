@@ -600,3 +600,292 @@ def comments_delete(request, article_pk, comment_pk):
 
 
 
+# 9. 이미지
+
+- 복습 static page란? - 우리가 미리 만들어 놓은 정보에 접근하기만 하면 웹상으로 보여주는 동작정도만 가능한 페이지. <-> dynamic page 동적으로 사용자와 웹이 상호작용되는 페이지
+- static file 저장 directory -> application directory/static 폴더 생성(template 폴더와 성격이 비슷)
+- articles/static/articles/images 폴더 생성한다.
+- 아무이지지를 해당 경로안에 저장한다.
+
+
+
+### 1. static사용하기 위해 import해야한다.
+
+- index.html 
+
+  ```django
+  {% extends 'base.html' %}
+  {% comment %} 페이지에서 맨 상단, extends보다는 하단 {% endcomment %}
+  {% load static %}
+  
+  ```
+
+### 2. image 파일 삽입
+
+- index.html
+
+  ```django
+  <img src="{% static 'articles/images/gomi_cute.jpg' %}" alt="그림">
+  ```
+
+
+
+# 10. static 파일 관리
+
+!! 중요개념 !!
+
+- static폴더를 맨 바깥directory에 생성하고, base.css파일을 생성해보자
+
+  ```css
+  h1 {
+    color: darkslateblue;
+  }
+  ```
+
+  
+
+- 아무리 우리가 static파일을 관리하는 폴더가 있더라도, 요청자(사용자)가 스테틱 폴더로 접근할 수 있도록 하는 명령(?)이 없다면 불러 올 수 없다. 
+
+```PYTHON
+# settings.py
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'), 
+]
+```
+
+
+
+- `STATIC_URL = '/static/'` 얘는 스태틱을 호출하면 static폴더에서 static파일을 검색하겠다(templates를 찾는것 처럼)
+
+
+
+# 11. article에 image 받기
+
+
+
+### 1) articles/models.py
+
+```python
+# 모델정의
+class Article(models.Model):
+    title = models.CharField(max_length=20) 
+    content = models.TextField()
+
+    # 이미지 데이터를 받는다. blank=True의미 : 아무런 값이 없더라도 저장할 수 있다.
+    # blank : 데이터 유효성과 관련되어 있다.
+    image = models.ImageField(blank=True)
+    
+    
+    created_at = models.DateTimeField(auto_now_add=True)  # 새롭게 추가할때만 시간을 등록하고, 수정할때는 등록하지 않는다.
+    updated_at = models.DateTimeField(auto_now=True)  # 언제든지 수정되었을 때의 시간을 저장하겠다.
+
+```
+
+
+
+- blank option 참고자료 : https://wayhome25.github.io/django/2017/09/23/django-blank-null/
+- null : DB와 관련되어 있다. -> 해당 필드에 저장될 때, null 값이 저장될지 말지 선택
+- blank : 데이터가 들어올 때 이미 데이터가 비워져있는데, 그걸 저장해도 되는지? 물어보는 옵션
+- ex) null=True ->빈 데이터를 받을 때, 그 공간에 null이라고 받는다.
+- ex) blank=True -> 빈 데이터를 받을 때,  그 공간에 빈 스트링 값('')을 받는다.
+
+```
+# TextField(blank=True)가 defult값.., null=True는 적합하지 않다/
+# Integer(blank=True, null=True) 둘다 가능
+```
+
+
+
+### 2) pillow module download
+
+```python
+
+(venv) C:\Users\student\Django\Django_CRUD>python manage.py makemigrations
+SystemCheckError: System check identified some issues:
+
+ERRORS:
+articles.Article.image: (fields.E210) Cannot use ImageField because Pillow is not installed.
+        HINT: Get Pillow at https://pypi.org/project/Pillow/ or run command "pip install Pillow".
+```
+
+
+
+- 이미지 필드를 저장하고 싶다면 아래 모듈을 설치해야한다.
+
+```bash
+$ pip install Pillow
+```
+
+
+
+### 3) model 적용
+
+```bash
+$ python manage.py makemigrations
+$ python manage.py migrate
+```
+
+
+
+### 4) enctype
+
+- Form으로 파일타입을 보낼 수 있도록 enctypre 속성을 `mulitpart/form-data`로 설정
+- Form 안에서 File type 의 input 생성, `accept="image/*"`
+- `accept` : 특정 파일 타입만 받을 수 있게 하기 위한 속성
+
+- create.html에서 form에 enctype 속성을 부여하자. -> 이미지 파일을 저장하기 위해서
+- enctype?
+
+```django
+ <form action="{% url 'articles:create' %}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="text", name='title'> <br>
+    <textarea name="content"  cols="30" rows="10"></textarea><br>
+
+    
+	{% comment %} 새로 들어옴 {% endcomment %}
+    <label for="image">이미지:</label>
+    <input type="file" name="image" id="image" accept="image/*"><br>
+    {% comment %} 새로들어옴 {% endcomment %}    
+     
+    <button type="submit">생성하기</button><br>
+  </form>
+```
+
+
+
+- views.py
+- create 함수에서 파일을 ` request.FILES` 에서 꺼내서` article`에 넣고 저장
+
+```python
+# POST /articles/create/
+def create(request):
+    # 만약 POST 요청이라면 사용자 데이터를 받아서 articles 생성
+    if request.method == 'POST':
+
+         # articles/new/를 통해 new.html의 form에서 전달받은 데이터 
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        
+        # image를 받아오자. 할때 post로 받지 못하고, files로 받아야 한다.
+        image = request.FILES.get('image')
+        #우리가 받은 데이터를 DB에 생성하자
+        article = Article(title='title', content='content', image='image')
+        article.save()
+
+        return redirect('articles:detail', article.pk)
+    
+    # 아니라면(GET)요청으로 들어오면 html 페이지 rendering
+    else:
+        return render(request,'articles/create.html')
+```
+
+
+
+### 5) MEDIA_URL 생성
+
+- crud/settings.py
+- 미디어 파일이 저장되는 경로(업로드 파일 경로)를 임의로 설정해야 한다. - > 경로만 생성한 케이스
+- 
+
+```python
+# media files
+
+#<프로젝트>/media/
+MEDIA_URL= '/media/'  # Client가 media 파일들로 접근할 수 있는 URL 이름 설정
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # media 파일들을 저장하기 위한 폴더 생성
+
+```
+
+
+
+- crud/urls.py
+- 사용자와 내 사이트를 연결하기 위한 과정
+- client가 실제 파일들로 접근할 수 있는 URL 생성
+
+```python
+from django.conf import settings  # crud/settings.py를 받아오는 명령
+from django.conf.urls.static import static  # static함수를 불러오기위해 import
+
+# 사용자가 media 파일이 있는 곳으로 올 수 있는 경로를 추가한다.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+
+
+- 이렇게 설정하면 이제부터 <base_dir>/media 폴더를 생성하고 미디어 파일을 관리하게 된다.
+
+  
+
+### 6) 예외처리
+
+- 기존에 있었던 게시글에 이미지가 없기 때문에 오류가 뜬다. 
+
+```
+# detail.html
+<li>
+    {{ comment.content }}
+    	<form action="{% url 'articles:comments_delete' article.pk comment.pk %}" method='POST'>
+    	{% csrf_token %}
+    	<button type="submit">삭제하기</button>
+    </form>
+</li>
+```
+
+
+
+# [참고] 이미지 재정리
+
+```
+## Media 파일 올리기 위한 작업
+
+1. Article Model 에 `ImageField` 추가
+
+2. ###### Form 에서 파일 타입을 보낼 수 있도록 `enctype` 속성을 `multipart/form-data` 로 줬음.
+
+3. Form 안에서 File type 의 input 생성, `accept="image/*"` 속성을 줬음
+
+   - `accept`: 특정 파일 타입만 받을 수 있게 하기 위한 속성
+
+4. `create` 함수에서 파일을 `request.FILES` 에서 꺼내서 article 에 넣고 저장.
+
+5. media 파일들을 저장하기 위한 폴더 설정
+
+   ```python
+   # settings.py
+   MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # 프로젝트/media/
+   ```
+
+6. Client 가 media 파일들로 접근할 수 있는  URL 이름 설정
+
+   ```python
+   # settings.py
+   MEDIA_URL = '/media/'
+   ```
+
+7. Client 가 실제 파일들로 접근할 수 있는 URL 생성
+
+   ```python
+   # crud/urls.py
+   from django.conf import settings
+   from django.conf.urls.static import static
+   
+   ...
+   
+   # MEDIA_URL 로 들어오면 MEDIA_ROOT 에 저장한 파일들로 접근할 수 있습니다.
+   urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+   ```
+
+8. Detail 페이지에서 이미지 보여주기
+
+   **`detail.html`**
+
+   ```django
+   <img src="{{ article.image.url }}" alt="{{ article.image }}">
+   ```
+```
+
+
+  
+

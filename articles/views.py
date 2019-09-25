@@ -46,11 +46,9 @@ def create(request):
          # articles/new/를 통해 new.html의 form에서 전달받은 데이터 
         title = request.POST.get('title')
         content = request.POST.get('content')    
-
+        image = request.FILES.get('image')
         #우리가 받은 데이터를 DB에 생성하자
-        article = Article()
-        article.title = title
-        article.content = content
+        article = Article(title=title, content=content, image=image)
         article.save()
 
         return redirect('articles:detail', article.pk)
@@ -77,10 +75,15 @@ def update(request, article_pk):
     if request.method == "POST":
         title = request.POST.get('title')
         content = request.POST.get('content')
-
+        image = request.FILES.get('image') # 만약 아무것도 안넘어 왔다면, 이미지를 수정하지 않겠다.
+                                           # 만약 어떤것이 넘어 왔다면, 이미지를 수정하겠다.
+        
+        if image:
+            article.image = image
+            
         article.title = title
         article.content = content
-
+        
         article.save()
         return redirect('articles:detail', article_pk)
 
